@@ -24,9 +24,10 @@ lib_LTLIBRARIES = libscan_hashid.la
 libscan_hashid_la_LDFLAGS = -static -avoid-version
 
 # for access to be13_api and dfxml
-AM_CPPFLAGS = -isystem${top_srcdir}/src/be_scan/be13_api -isystem${top_srcdir}/src
+#AM_CPPFLAGS = -isystem${top_srcdir}/src/be13_api -isystem${top_srcdir}/src
+AM_CPPFLAGS = -I${top_srcdir}/src/be13_api -I${top_srcdir}/src
 
-libscan_hashid_la_LIBADD = libhashdb.la
+libscan_hashid_la_LADD = libhashdb.la
 
 AM_LDFLAGS = -static
 

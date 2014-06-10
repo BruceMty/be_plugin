@@ -1,0 +1,56 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# misc
+*.d
+*.dSYM
+*.log
+*.o
+*.so
+*.swp
+*.swo
+*.swn
+*~
+.deps
+libtool
+Makefile
+Makefile.in
+hashdb-*.zip
+aclocal.m4
+autom4te.cache
+config.guess
+config.h
+config.h.in
+config.status
+config.sub
+configure
+*.dirstamp
+depcomp
+install-sh
+man/Makefile
+missing
+src/Makefile
+stamp-h
+stamp-h1
+win32
+win64
+*.exe
+.DS_Store
+out-*/
+src/TAGS
+TAGS
+core.*
+be_plugin*.tar.gz
+space
+

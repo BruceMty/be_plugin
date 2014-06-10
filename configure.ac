@@ -54,7 +54,7 @@ m4_include([m4/slg_mingw_support.m4])
 m4_include([m4/slg_searchdirs.m4])
 m4_include([m4/slg_gcc_all_warnings.m4])
 m4_include([src/dfxml/src/dfxml_configure.m4])
-m4_include([src/be_scan/be13_api/be13_configure.m4])
+m4_include([src/be13_api/be13_configure.m4])
 
 ################################################################
 ## mcheck support
@@ -118,6 +118,45 @@ AC_MSG_NOTICE([After pthread test, LDFLAGS: $LDFLAGS])
 
 AC_CHECK_HEADERS([pthread.h])
 AC_CHECK_LIB([pthreadGC2],[pthread_create])
+
+################################################################
+## more to satisfy dependencies in be13_api
+
+## Check for headers used by bulk Extractor
+## do not put pthread here
+AC_CHECK_HEADERS([alloca.h dirent.h dlfcn.h err.h errno.h fcntl.h inttypes.h libgen.h limits.h malloc.h mmap.h pwd.h signal.h stdarg.h stdint.h stdio.h strings.h string.h stdlib.h sys/cdefs.h sys/disk.h sys/fcntl.h sys/ioctl.h sys/mman.h sys/mmap.h sys/mount.h sys/param.h sys/socket.h sys/stat.h sys/types.h sys/time.h sys/resource.h sys/sysctl.h time.h unistd.h windows.h CoreServices/CoreServices.h])
+AC_CHECK_FUNCS([err errx getuid getpwuid gethostname getrusage gmtime_r isxdigit ishexnumber le64toh localtime_r _lseeki64 inet_ntop pread64 pread printf mmap munmap MD5 mkstemp mktemp random srandom srandomdev sleep SleepEx strptime usleep vasprintf warn warnx])
+AC_CHECK_FUNCS([CreateProcess LoadLibrary IncrementAtomic InterlockedIncrement])
+
+## dlopen is now itself in a different library 
+## Explicitly check for dlopen library before checking for dlopen
+##       -ldl (see http://stackoverflow.com/questions/956640/linux-c-error-undefined-reference-to-dlopen)
+AC_CHECK_LIB([dl],[dlopen])		              
+AC_CHECK_FUNCS([dlopen dlopen_preflight])
+
+# Test for sin_len
+AC_CHECK_HEADERS([arpa/inet.h netinet/in.h wsipx.h])
+AC_CHECK_HEADERS([netinet/ip.h], [], [],
+[[
+#include <sys/types.h>
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+]])
+
+AC_CHECK_MEMBER([struct sockaddr_in.sin_len],
+		[AC_DEFINE(HAVE_SOCKADDR_IN_SIN_LEN, 1, [Do we have sockaddr.sin_len?])],
+		[],
+		[
+#include <sys/types.h>
+#include <arpa/inet.h>
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+		])
+
+
+
 
 ################################################################
 ##
@@ -196,7 +235,8 @@ AX_BOOST_BASE([1.53],
   AX_BOOST_IOSTREAMS
   AX_BOOST_THREAD
   LIBS="$BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_IOSTREAMS_LIB $BOOST_THREAD_LIB $LIBS"],
-  [AC_MSG_ERROR([Boost 1.53 or newer is required to build hashdb])])
+  [AC_MSG_ERROR([Boost 1.53 or newer is required])])
+
 
 ################################################################
 ## libboost_thread needs clock_gettime from librt
@@ -245,6 +285,23 @@ AC_CHECK_HEADERS([regex.h tre/tre.h])
 AC_CHECK_LIB([regex],[regcomp])
 AC_CHECK_LIB([tre],[tre_regcomp])
 AC_CHECK_FUNCS([regcomp tre_regcomp tre_version])
+
+################################################################
+## hashdb required
+
+if test x"$mingw" = x"yes";  then
+  # the win32 configuration of libxml2 requires zlib and iconv libraries
+  AC_CHECK_LIB([z], [gzdopen],[LIBS="-lz $LIBS"], [AC_MSG_ERROR([Could not find zlib library])])
+  AC_CHECK_LIB([iconv], [iconv],[LIBS="-liconv $LIBS"], [AC_MSG_ERROR([Could not find win-iconv library])])
+fi
+
+AC_CHECK_LIB([xml2], [xmlSAXUserParseFile],,[missing -llibxml2])
+
+
+AC_LANG_PUSH(C++)
+AC_CHECK_HEADER([hashdb.hpp], [], [AC_MSG_ERROR([Could not find hashdb header file])])
+AC_CHECK_LIB([hashdb], [hashdb_version], [], [AC_MSG_ERROR([Could not find hashdb library])])
+AC_LANG_POP()
 
 ################################################################
 ## support required by be13_api required by DFXML
@@ -365,7 +422,7 @@ echo "#define CXXFLAGS \"$CXXFLAGS\"" >> config.h
 echo "#define LIBS     \"$LIBS\""     >> config.h
 echo "#define LDFLAGS  \"$LDFLAGS\""  >> config.h
 
-## for hashdb git version, see dfxml_configure.m4
+## for git version, see dfxml_configure.m4
 if test x"$GIT_COMMIT" != "x" ; then
   echo "#define GIT_COMMIT  \"$GIT_COMMIT\""  >> config.h
 fi
