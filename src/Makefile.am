@@ -19,15 +19,16 @@
 
 # This file assists in building test programs.
 
-lib_LTLIBRARIES = libscan_hashid.la
+lib_LTLIBRARIES = scan_hashid.la
 
-libscan_hashid_la_LDFLAGS = -static -avoid-version
+#libscan_hashid_la_LDFLAGS = -static -avoid-version
+scan_hashid_la_LDFLAGS = -export-dynamic -module -avoid-version
 
 # for access to be13_api and dfxml
 #AM_CPPFLAGS = -isystem${top_srcdir}/src/be13_api -isystem${top_srcdir}/src
 AM_CPPFLAGS = -I${top_srcdir}/src/be13_api -I${top_srcdir}/src
 
-libscan_hashid_la_LADD = libhashdb.la
+scan_hashid_la_LADD = libhashdb.la
 
 AM_LDFLAGS = -static
 
@@ -35,9 +36,9 @@ AM_LDFLAGS = -static
 BE13_API_INCS = \
 	bulk_extractor_i.h
 
-libscan_hashid_la_SOURCES = \
+scan_hashid_la_SOURCES = \
 	$(BE13_API_INCS) \
-	scan_hashid.cpp
+	scan_hashid_plugin.cpp
 
 
 .PHONY: 
